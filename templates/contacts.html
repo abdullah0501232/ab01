@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Contacts Directory</h1>
+        <p>Maintain professional connections, hiring managers, recruiters, and internal referrers.</p>
+    </div>
+</div>
+
+<!-- Add Contact Form -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add New Contact
+    </div>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="company_id">Company <span class="required">*</span></label>
+                <select id="company_id" name="company_id" required>
+                    <option value="">-- Select Company --</option>
+                    {% for company in companies %}
+                    <option value="{{ company.company_id }}">{{ company.company_name }}</option>
+                    {% endfor %}
+                </select>
+                <span class="form-help">Company not listed? Add it on the <a href="{{ url_for('companies') }}">Companies</a> page.</span>
+            </div>
+
+            <div class="form-group">
+                <label for="contact_name">Full Name <span class="required">*</span></label>
+                <input type="text" id="contact_name" name="contact_name" placeholder="e.g. Jane Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Role / Job Title</label>
+                <input type="text" id="title" name="title" placeholder="e.g. Lead Technical Recruiter, Engineering Manager">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="jane.doe@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="+1 (555) 012-3456">
+            </div>
+
+            <div class="form-group">
+                <label for="linkedin_url">LinkedIn Profile URL</label>
+                <input type="url" id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/username">
+            </div>
+
+            <div class="form-group form-grid-full">
+                <label for="notes">Notes / Interaction History</label>
+                <textarea id="notes" name="notes" placeholder="Met at career fair, referral conversation, follow-up dates..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Contact
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Contacts Table -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        All Contacts ({{ contacts|length }})
+    </div>
+
+    {% if contacts %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Contact Info</th>
+                    <th>LinkedIn</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td>{{ contact.contact_id }}</td>
+                    <td><strong>{{ contact.contact_name }}</strong></td>
+                    <td>{{ contact.title or '-' }}</td>
+                    <td>{{ contact.company_name }}</td>
+                    <td>
+                        {% if contact.email %}
+                        <a href="mailto:{{ contact.email }}" class="table-link">{{ contact.email }}</a>
+                        {% endif %}
+                        {% if contact.phone %}
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ contact.phone }}</div>
+                        {% endif %}
+                        {% if not contact.email and not contact.phone %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if contact.linkedin_url %}
+                        <a href="{{ contact.linkedin_url if contact.linkedin_url.startswith('http') else 'https://' + contact.linkedin_url }}" target="_blank" class="table-link">
+                            Profile &nearr;
+                        </a>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td><span class="text-truncate" title="{{ contact.notes or '' }}">{{ contact.notes or '-' }}</span></td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{{ url_for('edit_contact', contact_id=contact.contact_id) }}" class="btn btn-sm btn-secondary">
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_contact', contact_id=contact.contact_id) }}" style="display:inline;" onsubmit="return confirm('Delete contact {{ contact.contact_name }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        <h3>No contacts recorded yet</h3>
+        <p>Keep your recruiter and mentor connections organized by adding one above.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

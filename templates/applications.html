@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Applications &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Applications Management</h1>
+        <p>Track your submission dates, pipeline stages, resume versions, and interview timelines.</p>
+    </div>
+</div>
+
+<!-- Log Application Form -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Log New Job Application
+    </div>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="job_id">Select Job & Company <span class="required">*</span></label>
+                <select id="job_id" name="job_id" required>
+                    <option value="">-- Choose Target Job --</option>
+                    {% for job in jobs %}
+                    <option value="{{ job.job_id }}">{{ job.job_title }} &mdash; {{ job.company_name }}</option>
+                    {% endfor %}
+                </select>
+                <span class="form-help">Need to add a job first? Go to <a href="{{ url_for('jobs') }}">Jobs</a>.</span>
+            </div>
+
+            <div class="form-group">
+                <label for="application_date">Application Date <span class="required">*</span></label>
+                <input type="date" id="application_date" name="application_date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Application Stage / Status <span class="required">*</span></label>
+                <select id="status" name="status" required>
+                    <option value="Applied">Applied</option>
+                    <option value="Screening">Screening</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Withdrawn">Withdrawn</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="resume_version">Resume Version</label>
+                <input type="text" id="resume_version" name="resume_version" placeholder="e.g. Tech_Resume_v2, SWE_Backend">
+            </div>
+
+            <div class="form-group">
+                <label>Cover Letter</label>
+                <label class="checkbox-group">
+                    <input type="checkbox" name="cover_letter_sent" value="1">
+                    <span>Cover letter was attached / submitted</span>
+                </label>
+            </div>
+
+            <div class="form-group form-grid-full">
+                <label for="interview_data">Interview Notes / Schedule</label>
+                <textarea id="interview_data" name="interview_data" placeholder="Recruiter name, technical round questions, coding assessment links, feedback..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Record Application
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Applications Table -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        All Applications ({{ applications|length }})
+    </div>
+
+    {% if applications %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Date Applied</th>
+                    <th>Status</th>
+                    <th>Resume</th>
+                    <th>Cover Letter</th>
+                    <th>Interview Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>{{ app.application_id }}</td>
+                    <td><strong>{{ app.job_title }}</strong></td>
+                    <td>{{ app.company_name }}</td>
+                    <td>{{ app.application_date }}</td>
+                    <td>
+                        <span class="badge badge-{{ app.status|lower }}">{{ app.status }}</span>
+                    </td>
+                    <td>{{ app.resume_version or '-' }}</td>
+                    <td>
+                        {% if app.cover_letter_sent %}
+                        <span class="badge badge-offer" style="font-size: 0.7rem;">Sent</span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">No</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="text-truncate" title="{{ app.interview_data or '' }}">{{ app.interview_data or '-' }}</span></td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{{ url_for('edit_application', application_id=app.application_id) }}" class="btn btn-sm btn-secondary">
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_application', application_id=app.application_id) }}" style="display:inline;" onsubmit="return confirm('Delete application for {{ app.job_title }} at {{ app.company_name }}?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        <h3>No applications recorded yet</h3>
+        <p>Log your job applications above to start tracking your interview progress.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

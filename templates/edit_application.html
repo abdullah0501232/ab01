@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Application &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Edit Job Application</h1>
+        <p>Update status, interview notes, or resume information.</p>
+    </div>
+    <a href="{{ url_for('applications') }}" class="btn btn-secondary">
+        &larr; Back to Applications
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        Edit Application #{{ application.application_id }}
+    </div>
+
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="job_id">Target Job Listing <span class="required">*</span></label>
+                <select id="job_id" name="job_id" required>
+                    {% for job in jobs %}
+                    <option value="{{ job.job_id }}" {% if job.job_id == application.job_id %}selected{% endif %}>
+                        {{ job.job_title }} &mdash; {{ job.company_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="application_date">Application Date <span class="required">*</span></label>
+                <input type="date" id="application_date" name="application_date" value="{{ application.application_date }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Application Stage / Status <span class="required">*</span></label>
+                <select id="status" name="status" required>
+                    {% for st in ['Applied', 'Screening', 'Interview', 'Offer', 'Rejected', 'Withdrawn'] %}
+                    <option value="{{ st }}" {% if application.status == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="resume_version">Resume Version</label>
+                <input type="text" id="resume_version" name="resume_version" value="{{ application.resume_version or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label>Cover Letter</label>
+                <label class="checkbox-group">
+                    <input type="checkbox" name="cover_letter_sent" value="1" {% if application.cover_letter_sent %}checked{% endif %}>
+                    <span>Cover letter was attached / submitted</span>
+                </label>
+            </div>
+
+            <div class="form-group form-grid-full">
+                <label for="interview_data">Interview Notes / Schedule</label>
+                <textarea id="interview_data" name="interview_data">{{ application.interview_data or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                Update Application
+            </button>
+            <a href="{{ url_for('applications') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

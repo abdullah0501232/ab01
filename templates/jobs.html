@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Job Opportunities</h1>
+        <p>Record job listings, required competencies, salary expectations, and application links.</p>
+    </div>
+</div>
+
+<!-- Add Job Form -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add New Job Listing
+    </div>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="company_id">Company <span class="required">*</span></label>
+                <select id="company_id" name="company_id" required>
+                    <option value="">-- Choose Company --</option>
+                    {% for company in companies %}
+                    <option value="{{ company.company_id }}">{{ company.company_name }}</option>
+                    {% endfor %}
+                </select>
+                <span class="form-help">Need to add a company first? Go to <a href="{{ url_for('companies') }}">Companies</a>.</span>
+            </div>
+
+            <div class="form-group">
+                <label for="job_title">Job Title <span class="required">*</span></label>
+                <input type="text" id="job_title" name="job_title" placeholder="e.g. Full-Stack Developer, Data Analyst" required>
+            </div>
+
+            <div class="form-group">
+                <label for="job_type">Employment Type</label>
+                <select id="job_type" name="job_type">
+                    <option value="">-- Select Type --</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Internship">Internship</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="salary_min">Minimum Salary ($/yr)</label>
+                <input type="number" id="salary_min" name="salary_min" placeholder="e.g. 70000" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="salary_max">Maximum Salary ($/yr)</label>
+                <input type="number" id="salary_max" name="salary_max" placeholder="e.g. 110000" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="date_posted">Date Posted</label>
+                <input type="date" id="date_posted" name="date_posted">
+            </div>
+
+            <div class="form-group form-grid-full">
+                <label for="job_url">Job Listing URL</label>
+                <input type="url" id="job_url" name="job_url" placeholder="https://careers.company.com/job/12345">
+            </div>
+
+            <div class="form-group form-grid-full">
+                <label for="requirements">Required Skills (Comma-Separated) <span class="required">*</span></label>
+                <textarea id="requirements" name="requirements" placeholder="e.g. Python, SQL, Flask, HTML, CSS, Git"></textarea>
+                <span class="form-help">These skills are parsed into JSON and used by the AI Job Match algorithm!</span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Job Listing
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- All Jobs Table -->
+<div class="card">
+    <div class="card-title">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        All Jobs ({{ jobs|length }})
+    </div>
+
+    {% if jobs %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Type</th>
+                    <th>Salary Range</th>
+                    <th>Posted</th>
+                    <th>Required Skills</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.job_id }}</td>
+                    <td>
+                        <strong>{{ job.job_title }}</strong>
+                        {% if job.job_url %}
+                        <br>
+                        <a href="{{ job.job_url if job.job_url.startswith('http') else 'https://' + job.job_url }}" target="_blank" class="table-link" style="font-size: 0.75rem;">
+                            View Posting &nearr;
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.company_name }}</td>
+                    <td>
+                        {% if job.job_type %}
+                        <span class="badge badge-job-type">{{ job.job_type }}</span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if job.salary_min and job.salary_max %}
+                            ${{ "{:,}".format(job.salary_min) }} - ${{ "{:,}".format(job.salary_max) }}
+                        {% elif job.salary_min %}
+                            From ${{ "{:,}".format(job.salary_min) }}
+                        {% elif job.salary_max %}
+                            Up to ${{ "{:,}".format(job.salary_max) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ job.date_posted or '-' }}</td>
+                    <td>
+                        <div class="skills-container">
+                            {% set skills = job.requirements %}
+                            {% if skills is string %}
+                                <span class="skill-chip">{{ skills }}</span>
+                            {% elif skills %}
+                                {% for s in skills %}
+                                <span class="skill-chip">{{ s }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 0.8rem;">None specified</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <a href="{{ url_for('edit_job', job_id=job.job_id) }}" class="btn btn-sm btn-secondary">
+                                Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_job', job_id=job.job_id) }}" style="display:inline;" onsubmit="return confirm('Delete {{ job.job_title }} at {{ job.company_name }}? Any associated applications will also be deleted.');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        <h3>No jobs recorded yet</h3>
+        <p>Add a new job opening above to track positions and enable the Job Match feature.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

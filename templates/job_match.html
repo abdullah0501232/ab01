@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Job Match &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Job Match Feature</h1>
+        <p>Enter your skills to see jobs ranked by match percentage.</p>
+    </div>
+</div>
+
+<!-- Simple Skills Input Form -->
+<div class="card">
+    <div class="card-title">Enter Your Skills</div>
+    <p class="card-subtitle">Separate skills with commas (e.g. Python, SQL, Flask).</p>
+
+    <form method="POST">
+        <div class="form-group">
+            <input 
+                type="text" 
+                name="skills" 
+                placeholder="Python, SQL, Flask" 
+                value="{{ user_skills }}" 
+                required
+            >
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Find Matching Jobs</button>
+            {% if user_skills %}
+            <a href="{{ url_for('job_match') }}" class="btn btn-secondary">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Matching Results Table -->
+{% if user_skills %}
+<div class="card">
+    <div class="card-title">
+        Matching Jobs for: <span style="color: var(--primary);">{{ user_skills }}</span>
+    </div>
+
+    {% if jobs %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Match %</th>
+                    <th>Matched Skills</th>
+                    <th>Missing Skills</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td><strong>#{{ loop.index }}</strong></td>
+                    <td><strong>{{ job.job_title }}</strong></td>
+                    <td>{{ job.company_name }}</td>
+                    <td>
+                        <span class="badge {% if job.match_percentage >= 70 %}badge-offer{% elif job.match_percentage >= 40 %}badge-applied{% else %}badge-interview{% endif %}">
+                            {{ job.match_percentage }}% ({{ job.matched_count }}/{{ job.total_skills }})
+                        </span>
+                    </td>
+                    <td>
+                        {% if job.matched_skills %}
+                            {{ job.matched_skills | join(', ') }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if job.missing_skills %}
+                            <span style="color: #b91c1c;">Missing: {{ job.missing_skills | join(', ') }}</span>
+                        {% else %}
+                            <span style="color: #15803d; font-weight: 600;">Full Match!</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); margin-top: 10px;">No jobs found in database. Add jobs with required skills first.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

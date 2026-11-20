@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard &bull; Job Application Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-text">
+        <h1>Dashboard Overview</h1>
+        <p>Monitor your job search pipeline, active applications, and networking contacts in real-time.</p>
+    </div>
+</div>
+
+<!-- Stats Metric Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1M9 13h1M9 17h1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h3>Total Companies</h3>
+            <div class="stat-number">{{ total_companies }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <svg viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h3>Tracked Jobs</h3>
+            <div class="stat-number">{{ total_jobs }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon emerald">
+            <svg viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="14 2 14 8 20 8" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="16" y1="13" x2="8" y2="13" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="16" y1="17" x2="8" y2="17" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h3>Applications</h3>
+            <div class="stat-number">{{ total_applications }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon amber">
+            <svg viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="9" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <h3>Key Contacts</h3>
+            <div class="stat-number">{{ total_contacts }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation Bar -->
+<div class="quick-actions-bar">
+    <a href="{{ url_for('companies') }}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add Company
+    </a>
+    <a href="{{ url_for('jobs') }}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Add Job
+    </a>
+    <a href="{{ url_for('applications') }}" class="btn btn-primary">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Application
+    </a>
+    <a href="{{ url_for('job_match') }}" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+        Run Skill Match
+    </a>
+</div>
+
+<!-- Status Pipeline Breakdown -->
+{% if status_counts %}
+<div class="card">
+    <div class="card-title">Application Status Pipeline</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <span class="badge badge-applied">Applied: {{ status_counts.get('Applied', 0) }}</span>
+        <span class="badge badge-screening">Screening: {{ status_counts.get('Screening', 0) }}</span>
+        <span class="badge badge-interview">Interview: {{ status_counts.get('Interview', 0) }}</span>
+        <span class="badge badge-offer">Offer: {{ status_counts.get('Offer', 0) }}</span>
+        <span class="badge badge-rejected">Rejected: {{ status_counts.get('Rejected', 0) }}</span>
+        <span class="badge badge-withdrawn">Withdrawn: {{ status_counts.get('Withdrawn', 0) }}</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Applications Table -->
+<div class="card">
+    <div class="card-title">Recent Applications</div>
+    {% if recent_applications %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Applied Date</th>
+                    <th>Status</th>
+                    <th>Resume</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in recent_applications %}
+                <tr>
+                    <td><strong>{{ app.job_title }}</strong></td>
+                    <td>{{ app.company_name }}</td>
+                    <td>{{ app.application_date }}</td>
+                    <td>
+                        <span class="badge badge-{{ app.status|lower }}">{{ app.status }}</span>
+                    </td>
+                    <td>{{ app.resume_version or '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_application', application_id=app.application_id) }}" class="btn btn-sm btn-secondary">
+                            View / Edit
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h3>No applications yet</h3>
+        <p>Start tracking your job search by logging your first application.</p>
+        <a href="{{ url_for('applications') }}" class="btn btn-primary btn-sm">+ Log Application</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
